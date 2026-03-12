@@ -1,0 +1,46 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import PassiveAggressiveClassifier
+from sklearn.metrics import accuracy_score
+
+# Load dataset
+data = pd.read_csv("news.csv")
+
+# Separate text and labels
+x = data["text"]
+y = data["label"]
+
+# Split dataset
+x_train, x_test, y_train, y_test = train_test_split(
+    x, y, test_size=0.2, random_state=42)
+
+# Convert text to numerical data
+tfidf = TfidfVectorizer(stop_words='english', max_df=0.7)
+
+tfidf_train = tfidf.fit_transform(x_train)
+tfidf_test = tfidf.transform(x_test)
+
+# Train model
+model = PassiveAggressiveClassifier(max_iter=50)
+model.fit(tfidf_train, y_train)
+
+# Prediction
+y_pred = model.predict(tfidf_test)
+
+# Accuracy
+score = accuracy_score(y_test, y_pred)
+print("Model Accuracy:", round(score*100,2), "%")
+
+# Test with custom input
+def check_news():
+    news = input("Enter news headline: ")
+    vector = tfidf.transform([news])
+    prediction = model.predict(vector)
+
+    if prediction[0] == "FAKE":
+        print("⚠ This news is likely FAKE")
+    else:
+        print("✅ This news is likely REAL")
+
+check_news()
